@@ -1,0 +1,31 @@
+<link rel="import" href="/assets/polymer/polymer.html">
+
+<script src="/socket.io/socket.io.js"></script>
+
+<dom-module id="socket-io">
+    <template>
+        <content class="test"></content>
+    </template>
+
+    <script>
+        var current_socket;
+
+        Polymer({
+            is: 'socket-io',
+            properties: {
+                url: String,
+                message: String,
+                targetElement: String,
+                targetEvent: String
+            },
+            ready: function() {
+                if (this.url) {
+                    current_socket = io(this.url);
+                }
+                if (this.message) {
+                    console.log(this.queryEffectiveChildren(this.targetElement));
+                }
+            }
+        });
+    </script>
+</dom-module>

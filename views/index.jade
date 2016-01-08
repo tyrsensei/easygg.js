@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  socket-io(url='/')
+  socket-io
+    paper-input(label='input test')
+  socket-io(message='connected users', target-element='paper-button', target-event='click')
+    paper-button(raised) Envoyer

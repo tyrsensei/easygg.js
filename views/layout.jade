@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    title= title
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    script(src='/assets/webcomponentsjs/webcomponents-lite.min.js')
+    link(rel='import', href='/assets/paper-styles/typography.html')
+    link(rel='import', href='/assets/iron-flex-layout/iron-flex-layout.html')
+    link(rel='import', href='/assets/paper-toolbar/paper-toolbar.html')
+    link(rel='import', href='/assets/paper-input/paper-input.html')
+    link(rel='import', href='/assets/paper-button/paper-button.html')
+    link(rel='import', href='/elements/socket-io.html')
+  body(unresolved, fullbleed)
+    block content
