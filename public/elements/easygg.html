@@ -1,0 +1,37 @@
+<link rel="import" href="/assets/polymer/polymer.html">
+
+<dom-module id="games-list">
+    <template>
+        <paper-listbox>
+            <template is="dom-repeat" items="[[_toArray(games)]]">
+                <paper-icon-item>
+                    <paper-item-body>[[item.value.name]]</paper-item-body>
+                    <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
+                </paper-icon-item>
+            </template>
+        </paper-listbox>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'games-list',
+            properties: {
+                games: {
+                    type: Object,
+                    notify: true
+                }
+            },
+            ready: function() {
+                this.games = {test1: {name: 'truc'}, test2: {name: 'bidule'}};
+            },
+            _toArray: function(obj) {
+                return Object.keys(obj).map(function(key) {
+                    return {
+                        name: key,
+                        value: obj[key]
+                    };
+                });
+            }
+        });
+    </script>
+</dom-module>

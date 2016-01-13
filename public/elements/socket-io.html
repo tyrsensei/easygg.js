@@ -4,28 +4,75 @@
 
 <dom-module id="socket-io">
     <template>
-        <content class="test"></content>
+        <content></content>
     </template>
 
     <script>
+        var namespaces = {};
         var current_socket;
 
         Polymer({
             is: 'socket-io',
             properties: {
-                url: String,
-                message: String,
+                namespace: String,
+                emit: String,
                 targetElement: String,
-                targetEvent: String
+                targetEvent: String,
+                receive: String,
+                receiveCallback: String
             },
             ready: function() {
-                if (this.url) {
-                    current_socket = io(this.url);
+                if (this.emit) {
+                    // Emit a message
+                    var message = this.emit;
+                    var namespace = this.namespace;
+
+                    var emitMessage = function(){
+                        if (namespace) {
+                            this.changeNamespace(namespace);
+                        }
+                        current_socket.emit(message);
+                    }.bind(this);
+
+                    if (this.targetEvent) {
+                        // if an event is defined, prepare the emit action
+                        this.queryEffectiveChildren(this.targetElement).addEventListener(this.targetEvent, emitMessage);
+                    } else {
+                        // if no event, send the message already
+                        emitMessage();
+                    }
+                } else if (this.namespace) {
+                    // Set a namespace
+                    this.changeNamespace(this.namespace);
                 }
-                if (this.message) {
-                    console.log(this.queryEffectiveChildren(this.targetElement));
+            },
+            attached: function() {
+                // Message received
+                if (this.receive) {
+                    if (this.namespace) {
+                        this.changeNamespace(this.namespace);
+                    }
+                    current_socket.on(this.receive, window[this.receiveCallback]);
+                }
+            },
+            changeNamespace: function(namespace) {
+                // change the namespace used
+                var ns;
+                if (typeof window[namespace] === "function") {
+                    ns = window[namespace]();
+                } else {
+                    ns = namespace;
+                }
+                if (ns == "") {
+                    ns = '/';
+                }
+                if (namespaces[ns]) {
+                    current_socket = namespaces[ns];
+                } else {
+                    current_socket = namespaces[ns] = io(ns);
                 }
             }
+
         });
     </script>
 </dom-module>

@@ -8,6 +8,10 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 
 var app = express();
+
+var game = require('./lib/easygg-game');
+var player = require('./lib/easygg-player');
+
 app.easygg = require('./lib/easygg');
 
 
@@ -33,10 +37,28 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+// Easygg init
+app.easygg.addGame(
+  '/test',
+  new game({name: 'test', minPlayers: 1, maxPlayers: 2}),
+  {
+    'game tables': function() {
+      this.emit('game tables');
+    },
+    'new game': function() {
+      console.log('new game received');
+      this.emit('new game');
+    }
+  }
+);
+
 // Socket.io callbacks
 app.socketCallbacks = {
   'connected users': function() {
-    return this.getConnectedSockets();
+    this.emit('connected users', {number: app.easygg.getConnectedSockets()});
+  },
+  'games list': function() {
+    this.emit('games list', {games: app.easygg.getGames()});
   }
 };
 
