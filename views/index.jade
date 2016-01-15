@@ -1,28 +1,7 @@
 extends layout
 
 block content
-  socket-io(namespace='/')
-  socket-io(emit='games list')
-  socket-io(receive='connected users', receive-callback='addToDebug')
-  socket-io(receive='games list', receive-callback='refreshGameList')
-  socket-io(receive='game tables', receive-callback='addToDebug')
-  socket-io(emit='connected users', target-element='paper-button', target-event='click', namespace='/')
-    paper-button(raised) Nombre d'utilisateurs
-  socket-io(emit='games list', target-element='paper-button', target-event='click', namespace='/')
-    paper-button(raised) Liste des jeux
-  games-list
-  socket-io(emit='game tables', target-element='paper-button', target-event='click', namespace='getNamespace')
-    paper-input(label='game namespace', id='namespace')
-    paper-button(raised) Change namespace
-
-  script.
-    function addToDebug(data) {
-      console.log(data);
-    }
-    function getNamespace() {
-      return document.getElementById('namespace').value;
-    }
-    function refreshGameList(data) {
-      document.querySelector('games-list').games = data.games;
-      addToDebug(data.games);
-    }
+  div(ns='user', class='vertical layout center')
+    user-form
+  div(ns='/test', class='vertical layout')
+    tables-list

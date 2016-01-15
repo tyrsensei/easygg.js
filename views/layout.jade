@@ -6,8 +6,12 @@ html
     script(src='/assets/webcomponentsjs/webcomponents-lite.min.js')
 
     link(rel='import', href='/assets/iron-flex-layout/iron-flex-layout.html')
+    link(rel='import', href='/assets/iron-icon/iron-icon.html')
     link(rel='import', href='/assets/iron-icons/iron-icons.html')
+    link(rel='import', href='/assets/iron-icons/social-icons.html')
+    link(rel='import', href='/assets/iron-pages/iron-pages.html')
     link(rel='import', href='/assets/paper-button/paper-button.html')
+    link(rel='import', href='/assets/paper-card/paper-card.html')
     link(rel='import', href='/assets/paper-drawer-panel/paper-drawer-panel.html')
     link(rel='import', href='/assets/paper-header-panel/paper-header-panel.html')
     link(rel='import', href='/assets/paper-icon-button/paper-icon-button.html')
@@ -29,16 +33,52 @@ html
       body {
         @apply(--paper-font-common-base);
       }
+      paper-material {
+        padding:15px;
+      }
+      #main {
+        padding-top: 10px;
+        width:80%;
+      }
 
-  body(unresolved, fullbleed, layout, vertical)
+  body(unresolved, fullbleed, class='layout vertical')
+
+    socket-io(namespace='/')
+    socket-io(receive='connected users', receive-callback='refreshConnectedUsers')
+    socket-io(receive='games list', receive-callback='refreshGameList')
+    socket-io(emit='games list')
+    socket-io(emit='connected users', interval='60000')
+    socket-io(receive='game tables', receive-callback='changeGame', namespace='/test')
+
     paper-drawer-panel(force-narrow)
-      paper-header-panel(drawer)
+      paper-header-panel(drawer, mode='waterfall')
         paper-toolbar
-          div(class='title') Menu
-        div Drawer Content...
-      paper-header-panel(flex, mode='waterfall', main)
+          div(class='title') Lise des jeux
+        div
+          games-list
+      paper-header-panel(mode='waterfall', main)
         paper-toolbar
           paper-icon-button(icon='menu', paper-drawer-toggle)
           div(class='title') EasyGG
-        div
-          block content
+          iron-icon(icon='social:people')
+          span &nbsp;
+            span(id='num-users') 0
+        div(class='vertical layout center')
+          iron-pages(id='main', attr-for-selected='ns', selected='user')
+            block content
+
+    script.
+      function addToDebug(data) {
+        console.log(data);
+      }
+      function refreshGameList(data) {
+        document.querySelector('games-list').games = data.games;
+        addToDebug(data);
+      }
+      function refreshConnectedUsers(data) {
+        document.querySelector('#num-users').textContent = data.number;
+      }
+      function changeGame(data) {
+        var pages = document.querySelector('iron-pages#main');
+        pages.select(data.game);
+      }

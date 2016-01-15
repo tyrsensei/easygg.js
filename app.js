@@ -43,7 +43,7 @@ app.easygg.addGame(
   new game({name: 'test', minPlayers: 1, maxPlayers: 2}),
   {
     'game tables': function() {
-      this.emit('game tables');
+      this.emit('game tables', {game: '/test'});
     },
     'new game': function() {
       console.log('new game received');
@@ -59,6 +59,10 @@ app.socketCallbacks = {
   },
   'games list': function() {
     this.emit('games list', {games: app.easygg.getGames()});
+  },
+  'user': function(data) {
+    console.log(this.id);
+    app.easygg.updatePlayer(this.id, data);
   }
 };
 

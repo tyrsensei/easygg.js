@@ -1,13 +1,16 @@
 <link rel="import" href="/assets/polymer/polymer.html">
+<link rel="import" href="/elements/socket-io.html">
 
 <dom-module id="games-list">
     <template>
         <paper-listbox>
             <template is="dom-repeat" items="[[_toArray(games)]]">
-                <paper-icon-item>
-                    <paper-item-body>[[item.value.name]]</paper-item-body>
-                    <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
-                </paper-icon-item>
+                    <paper-item>
+                        <paper-item-body>[[item.value.name]]</paper-item-body>
+                        <socket-io emit="game tables" target-element="paper-icon-button" target-event="tap" namespace="[[item.name]]">
+                            <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
+                        </socket-io>
+                    </paper-item>
             </template>
         </paper-listbox>
     </template>
@@ -21,8 +24,69 @@
                     notify: true
                 }
             },
-            ready: function() {
-                this.games = {test1: {name: 'truc'}, test2: {name: 'bidule'}};
+            _toArray: function(obj) {
+                return Object.keys(obj).map(function(key) {
+                    return {
+                        name: key,
+                        value: obj[key]
+                    };
+                });
+            }
+        });
+    </script>
+</dom-module>
+
+<dom-module id="user-form">
+    <template>
+        <paper-card heading="Joueur">
+            <div class="card-content">
+                <paper-input label="Nom" value="{{name}}"></paper-input>
+            </div>
+            <div class="card-actions horizontal layout center-justified">
+                <socket-io emit="user" target-element="paper-button" target-event="tap" emit-data='{ user : {{name}}}'>
+                    <paper-button raised>Valider</paper-button>
+                </socket-io>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'user-form',
+            properties: {
+                name: {
+                    type: String,
+                    notify: true
+                }
+            },
+            attached: function() {
+                this.name = 'test';
+            }
+        });
+    </script>
+</dom-module>
+
+<dom-module id="tables-list">
+    <template>
+        <paper-header-panel>
+            <paper-toolbar>
+                <div class="title">Liste des parties</div>
+                <paper-icon-button icon="icons:add"></paper-icon-button>
+            </paper-toolbar>
+            <div>
+                Contenu
+            </div>
+      </paper-header-panel>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'tables-list',
+            properties: {
+                tables: {
+                    type: Object,
+                    notify: true
+                }
             },
             _toArray: function(obj) {
                 return Object.keys(obj).map(function(key) {
@@ -31,6 +95,8 @@
                         value: obj[key]
                     };
                 });
+            },
+            createTable: function() {
             }
         });
     </script>
