@@ -37,7 +37,11 @@
                         if (namespace) {
                             socket = this.changeNamespace(namespace);
                         }
-                        socket.emit(message, data);
+                        if (data) {
+                            socket.emit(message, data);
+                        } else {
+                            socket.emit(message);
+                        }
                     }.bind(this);
 
                     if (this.targetEvent) {

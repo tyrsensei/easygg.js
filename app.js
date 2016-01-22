@@ -1,3 +1,4 @@
+var shortid = require('shortid');
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -9,8 +10,9 @@ var routes = require('./routes/index');
 
 var app = express();
 
-var game = require('./lib/easygg-game');
-var player = require('./lib/easygg-player');
+var Game = require('./lib/easygg-game');
+var Player = require('./lib/easygg-player');
+var Table = require('./lib/easygg-table');
 
 app.easygg = require('./lib/easygg');
 
@@ -40,14 +42,24 @@ app.use(function(req, res, next) {
 // Easygg init
 app.easygg.addGame(
   '/test',
-  new game({name: 'test', minPlayers: 1, maxPlayers: 2}),
+  new Game({name: 'test', minPlayers: 1, maxPlayers: 2}),
   {
     'game tables': function() {
-      this.emit('game tables', {game: '/test'});
+      this.emit('game tables', {game:'/test', tables: app.easygg.getTables()});
     },
-    'new game': function() {
-      console.log('new game received');
-      this.emit('new game');
+    'new game': function(data) {
+      var table = new Table(data);
+      var id = shortid.generate();
+      app.easygg.updateTable(id, table);
+
+      this.join(id);
+      this.emit('new game', {tableId: id});
+      this.emit('game tables', {game:'/test', tables: app.easygg.getTables()});
+    },
+    'join table': function(data) {
+      app.easygg.getPlayers()[this.conn.id].tables.push(data);
+      app.easygg.getTables()[data].players.push(this.conn.id);
+      this.join(data.name);
     }
   }
 );
@@ -61,8 +73,9 @@ app.socketCallbacks = {
     this.emit('games list', {games: app.easygg.getGames()});
   },
   'user': function(data) {
-    console.log(this.id);
-    app.easygg.updatePlayer(this.id, data);
+    var player = new Player(data);
+    app.easygg.updatePlayer(this.conn.id, player);
+    this.emit('user updated');
   }
 };
 

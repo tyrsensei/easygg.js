@@ -1,7 +1,7 @@
 doctype html
 html
   head
-    title= title
+    title Test
     meta(name='viewport', content='width=device-width, initial-scale=1')
     script(src='/assets/webcomponentsjs/webcomponents-lite.min.js')
 
@@ -12,6 +12,7 @@ html
     link(rel='import', href='/assets/iron-pages/iron-pages.html')
     link(rel='import', href='/assets/paper-button/paper-button.html')
     link(rel='import', href='/assets/paper-card/paper-card.html')
+    link(rel='import', href='/assets/paper-dialog/paper-dialog.html')
     link(rel='import', href='/assets/paper-drawer-panel/paper-drawer-panel.html')
     link(rel='import', href='/assets/paper-header-panel/paper-header-panel.html')
     link(rel='import', href='/assets/paper-icon-button/paper-icon-button.html')
@@ -41,25 +42,27 @@ html
         width:80%;
       }
 
-  body(unresolved, fullbleed, class='layout vertical')
+  body(unresolved, class='fullbleed layout vertical')
 
     socket-io(namespace='/')
     socket-io(receive='connected users', receive-callback='refreshConnectedUsers')
     socket-io(receive='games list', receive-callback='refreshGameList')
+    socket-io(receive='user updated', receive-callback='chooseGame')
+    socket-io(receive='game tables', receive-callback='changeGame', namespace='/test')
     socket-io(emit='games list')
     socket-io(emit='connected users', interval='60000')
-    socket-io(receive='game tables', receive-callback='changeGame', namespace='/test')
 
     paper-drawer-panel(force-narrow)
       paper-header-panel(drawer, mode='waterfall')
         paper-toolbar
-          div(class='title') Lise des jeux
+          div(class='title') Liste des jeux
         div
           games-list
       paper-header-panel(mode='waterfall', main)
         paper-toolbar
           paper-icon-button(icon='menu', paper-drawer-toggle)
           div(class='title') EasyGG
+          paper-icon-button(icon='social:person', id='profile')
           iron-icon(icon='social:people')
           span &nbsp;
             span(id='num-users') 0
@@ -73,7 +76,6 @@ html
       }
       function refreshGameList(data) {
         document.querySelector('games-list').games = data.games;
-        addToDebug(data);
       }
       function refreshConnectedUsers(data) {
         document.querySelector('#num-users').textContent = data.number;
@@ -81,4 +83,12 @@ html
       function changeGame(data) {
         var pages = document.querySelector('iron-pages#main');
         pages.select(data.game);
+        pages.selectedItem.querySelector('tables-list').tables = data.tables;
+        document.querySelector('paper-drawer-panel').closeDrawer();
       }
+      function chooseGame() {
+        document.querySelector('paper-drawer-panel').openDrawer();
+      }
+      document.querySelector('paper-icon-button#profile').addEventListener('tap', function() {
+        document.querySelector('iron-pages#main').select('user');
+      });

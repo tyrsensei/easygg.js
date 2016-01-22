@@ -40,10 +40,10 @@
     <template>
         <paper-card heading="Joueur">
             <div class="card-content">
-                <paper-input label="Nom" value="{{name}}"></paper-input>
+                <paper-input label="Nom" value="{{userData.name::input}}"></paper-input>
             </div>
             <div class="card-actions horizontal layout center-justified">
-                <socket-io emit="user" target-element="paper-button" target-event="tap" emit-data='{ user : {{name}}}'>
+                <socket-io emit="user" target-element="paper-button" target-event="tap" emit-data='{{userData}}'>
                     <paper-button raised>Valider</paper-button>
                 </socket-io>
             </div>
@@ -54,13 +54,11 @@
         Polymer({
             is: 'user-form',
             properties: {
-                name: {
-                    type: String,
+                userData: {
+                    type: Object,
+                    value: {name: 'tyrsensei'},
                     notify: true
                 }
-            },
-            attached: function() {
-                this.name = 'test';
             }
         });
     </script>
@@ -71,12 +69,30 @@
         <paper-header-panel>
             <paper-toolbar>
                 <div class="title">Liste des parties</div>
-                <paper-icon-button icon="icons:add"></paper-icon-button>
+                <paper-icon-button icon="icons:add" on-tap="openCreateDialog"></paper-icon-button>
             </paper-toolbar>
             <div>
-                Contenu
+                <paper-listbox>
+                    <template is="dom-repeat" items="[[_toArray(tables)]]">
+                        <paper-item>
+                            <paper-item-body>[[item.value.name]]</paper-item-body>
+                            <socket-io emit="join table" target-element="paper-icon-button" target-event="tap" namespace="/test" emit-data$="[[item.name]]">
+                                <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
+                            </socket-io>
+                        </paper-item>
+                    </template>
+                </paper-listbox>
             </div>
-      </paper-header-panel>
+        </paper-header-panel>
+        <paper-dialog>
+            <h2>Informations de la partie</h2>
+            <paper-input label="Nom de la partie" value="{{createData.name::input}}"></paper-input>
+            <div class="buttons">
+                <socket-io emit="new game" namespace="/test" target-element="paper-button" target-event="tap" emit-data='{{createData}}'>
+                    <paper-button raised><iron-icon icon="icons:add"></iron-icon> Créer</paper-button>
+                </socket-io>
+            </div>
+        </paper-dialog>
     </template>
 
     <script>
@@ -85,6 +101,11 @@
             properties: {
                 tables: {
                     type: Object,
+                    notify: true
+                },
+                createData: {
+                    type: Object,
+                    value: {name: "Ma Partie"},
                     notify: true
                 }
             },
@@ -96,7 +117,11 @@
                     };
                 });
             },
-            createTable: function() {
+            _debug : function() {
+                console.log(this._toArray(this.tables));
+            },
+            openCreateDialog: function() {
+                this.querySelector('paper-dialog').open();
             }
         });
     </script>

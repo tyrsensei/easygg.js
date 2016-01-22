@@ -1,0 +1,43 @@
+Server
+    games
+    connected
+    players
+    instances
+
+    addGame(game)
+    getGames()
+    addConnected()
+    getConnected()
+    addPlayer(player)
+    getPlayers()
+    addInstance(instance)
+    getInstances()
+Player
+    socketId
+    nickname
+    instances
+
+    updateInfo(info)
+    joinIntance(instance)
+    getInstances()
+Game
+    namespace
+    name
+    minPlayers
+    maxPlayers
+    instances
+
+    udpateInfo(info)
+    addInstance(intance)
+    getInstances()
+Instance
+    game
+    players({socketId : {score: 0, ready: false}})
+    minPlayers
+    maxPlayers
+    started = false
+
+    addPlayer(player)
+    getPlayers()
+    isReady()
+    startGame()
