@@ -1,5 +1,113 @@
+<script src="/socket.io/socket.io.js"></script>
 <link rel="import" href="/assets/polymer/polymer.html">
-<link rel="import" href="/elements/socket-io.html">
+
+<link rel='import' href='/assets/iron-flex-layout/iron-flex-layout.html'>
+<link rel='import' href='/assets/iron-icon/iron-icon.html'>
+<link rel='import' href='/assets/iron-icons/iron-icons.html'>
+<link rel='import' href='/assets/iron-icons/social-icons.html'>
+<link rel='import' href='/assets/iron-pages/iron-pages.html'>
+<link rel='import' href='/assets/paper-button/paper-button.html'>
+<link rel='import' href='/assets/paper-card/paper-card.html'>
+<link rel='import' href='/assets/paper-dialog/paper-dialog.html'>
+<link rel='import' href='/assets/paper-drawer-panel/paper-drawer-panel.html'>
+<link rel='import' href='/assets/paper-header-panel/paper-header-panel.html'>
+<link rel='import' href='/assets/paper-icon-button/paper-icon-button.html'>
+<link rel='import' href='/assets/paper-input/paper-input.html'>
+<link rel='import' href='/assets/paper-item/paper-icon-item.html'>
+<link rel='import' href='/assets/paper-item/paper-item-body.html'>
+<link rel='import' href='/assets/paper-item/paper-item.html'>
+<link rel='import' href='/assets/paper-listbox/paper-listbox.html'>
+<link rel='import' href='/assets/paper-material/paper-material.html'>
+<link rel='import' href='/assets/paper-styles/paper-styles.html'>
+<link rel='import' href='/assets/paper-toolbar/paper-toolbar.html'>
+
+<script>
+    SocketBehavior = {
+        properties: {
+            socket: {
+                type: Object,
+                notify: true
+            }
+        },
+        connect: function(namespace) {
+            if (namespace) {
+                this.socket = io(namespace);
+            } else {
+                this.socket = io();
+            }
+        },
+        sendMessage: function(message, data) {
+            this.socket.emit(message, data);
+        },
+        addReceive: function(message, cb) {
+            this.socket.on(message, cb);
+        }
+    };
+</script>
+
+<dom-module id="my-app">
+    <style>
+        paper-toolbar {
+            color:white !important;
+        }
+    </style>
+    <template>
+        <paper-drawer-panel force-narrow>
+            <paper-header-panel drawer mode='waterfall'>
+                <paper-toolbar>
+                    <div class='title'>Liste des jeux</div>
+                </paper-toolbar>
+                <div>
+                    <games-list></games-list>
+                </div>
+            </paper-header-panel>
+            <paper-header-panel mode='waterfall' main>
+                <paper-toolbar>
+                    <paper-icon-button icon='menu' paper-drawer-toggle>
+                    </paper-icon-button>
+                    <div class='title'>EasyGG</div>
+                    <paper-icon-button icon='social:person' id='profile'>
+                    </paper-icon-button>
+                    <iron-icon icon='social:people'></iron-icon><span>&nbsp;[[nbUsers]]</span>
+                </paper-toolbar>
+                <div class='vertical layout center'>
+                    <iron-pages id='main' attr-for-selected='ns' selected='user'>
+                        <user-form ns='user'></user-form>
+                    </iron-pages>
+                </div>
+            </paper-header-panel>
+        </paper-drawer-panel>
+    </template>
+
+    <script>
+        Polymer({
+            is: "my-app",
+            behaviors: [SocketBehavior],
+            properties: {
+                nbUsers: {
+                    type: Number,
+                    value: 0,
+                    notify: true
+                }
+            },
+            ready: function() {
+                // Connect to socket
+                SocketBehavior.connect();
+
+                // Initialize socket listeners
+                SocketBehavior.addReceive('games list', function(data) {
+                    this.$$('games-list').games = data.games;
+                }.bind(this));
+                SocketBehavior.addReceive('connected', function(data) {
+                    this.nbUsers = data.nbUsers;
+                }.bind(this));
+
+                // Get games list
+                SocketBehavior.sendMessage('games list');
+            }
+        });
+    </script>
+</dom-module>
 
 <dom-module id="games-list">
     <template>
@@ -7,9 +115,7 @@
             <template is="dom-repeat" items="[[_toArray(games)]]">
                     <paper-item>
                         <paper-item-body>[[item.value.name]]</paper-item-body>
-                        <socket-io emit="game tables" target-element="paper-icon-button" target-event="tap" namespace="[[item.name]]">
-                            <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
-                        </socket-io>
+                        <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
                     </paper-item>
             </template>
         </paper-listbox>
@@ -18,11 +124,15 @@
     <script>
         Polymer({
             is: 'games-list',
+            behaviors: [SocketBehavior],
             properties: {
                 games: {
                     type: Object,
                     notify: true
                 }
+            },
+            debug: function() {
+                console.log();
             },
             _toArray: function(obj) {
                 return Object.keys(obj).map(function(key) {
@@ -43,9 +153,7 @@
                 <paper-input label="Nom" value="{{userData.name::input}}"></paper-input>
             </div>
             <div class="card-actions horizontal layout center-justified">
-                <socket-io emit="user" target-element="paper-button" target-event="tap" emit-data='{{userData}}'>
-                    <paper-button raised>Valider</paper-button>
-                </socket-io>
+                <paper-button raised on-tap="updateUser">Valider</paper-button>
             </div>
         </paper-card>
     </template>
@@ -53,12 +161,16 @@
     <script>
         Polymer({
             is: 'user-form',
+            behaviors: [SocketBehavior],
             properties: {
                 userData: {
                     type: Object,
                     value: {name: 'tyrsensei'},
                     notify: true
                 }
+            },
+            updateUser: function() {
+                SocketBehavior.sendMessage('user', this.userData);
             }
         });
     </script>
@@ -76,9 +188,7 @@
                     <template is="dom-repeat" items="[[_toArray(tables)]]">
                         <paper-item>
                             <paper-item-body>[[item.value.name]]</paper-item-body>
-                            <socket-io emit="join table" target-element="paper-icon-button" target-event="tap" namespace="/test" emit-data$="[[item.name]]">
-                                <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
-                            </socket-io>
+                            <paper-icon-button icon="icons:send" alt="Rejoindre"></paper-icon-button>
                         </paper-item>
                     </template>
                 </paper-listbox>
@@ -88,9 +198,7 @@
             <h2>Informations de la partie</h2>
             <paper-input label="Nom de la partie" value="{{createData.name::input}}"></paper-input>
             <div class="buttons">
-                <socket-io emit="new game" namespace="/test" target-element="paper-button" target-event="tap" emit-data='{{createData}}'>
-                    <paper-button raised><iron-icon icon="icons:add"></iron-icon> Créer</paper-button>
-                </socket-io>
+                <paper-button raised><iron-icon icon="icons:add"></iron-icon> Créer</paper-button>
             </div>
         </paper-dialog>
     </template>

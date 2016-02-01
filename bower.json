@@ -29,7 +29,7 @@
     "paper-input": "PolymerElements/paper-input#~1.1.4",
     "paper-item": "PolymerElements/paper-item#~1.1.3",
     "paper-listbox": "polymerelements/paper-listbox#~1.1.0",
-    "paper-toolbar": "PolymerElements/paper-toolbar#~1.1.2",
+    "paper-toolbar": "PolymerElements/paper-toolbar#~1.1.3",
     "polymer": "~1.2.3"
   }
 }

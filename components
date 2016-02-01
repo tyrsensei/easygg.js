@@ -31,6 +31,7 @@ Game
     addInstance(intance)
     getInstances()
 Instance
+    roomId
     game
     players({socketId : {score: 0, ready: false}})
     minPlayers
@@ -40,4 +41,5 @@ Instance
     addPlayer(player)
     getPlayers()
     isReady()
+    isStarted()
     startGame()
