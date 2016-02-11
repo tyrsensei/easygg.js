@@ -4,13 +4,13 @@ Server
     players
     instances
 
-    addGame(game)
+    updateGame(game)
     getGames()
-    addConnected()
+    updateConnected()
     getConnected()
-    addPlayer(player)
+    updatePlayer(player)
     getPlayers()
-    addInstance(instance)
+    updateInstance(instance)
     getInstances()
 Player
     socketId
