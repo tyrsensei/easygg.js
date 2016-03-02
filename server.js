@@ -9,11 +9,27 @@ var Dice = require('./lib/easygg-dice');
 var dice = new Dice({});
 
 var game = new Game({
-    id: '/monjeu',
+    id: 'test',
     name: 'Jeu de test',
     actions: {
-        'roll': function() {
-            console.log(dice.roll());
+        'ready': function(data) {
+            var instance = this.easygg.instances[data.room];
+            instance.togglePlayerReady(this.id);
+            this.easygg.io.sockets.in(data.instance).emit('ready players', instance.readyPlayers);
+            if (instance.playersReady()) {
+                instance.started = true;
+                this.easygg.io.sockets.in(data.room).emit('intance started');
+            }
+        },
+        'roll': function(data) {
+            if (this.easygg.instances[data.room].started) {
+                var val = dice.roll();
+                var newData = {player: this.id, value: val};
+                console.log(newData);
+                this.easygg.io.sockets.in(data.room).emit('rolled', newData);
+            } else {
+                this.emit('not started');
+            }
         }
     }
 });
@@ -22,63 +38,72 @@ var server = new Server({
     server: app,
     callbacks: {
         'player': function(data) {
-            console.log('Here comes a new challenger');
+            console.log(this.id);
             var player = new Player({
-                id: this.socket.id,
+                id: this.id,
                 nickname: data.nickname
             });
-            this.updatePlayer(player.id, player);
+            this.easygg.updatePlayer(this.id, player);
         },
         'players': function() {
-            console.log(this.players);
+            console.log(this.easygg.players);
         },
         'games': function() {
-            console.log(this.games);
+            console.log(this.easygg.games);
         },
         'io': function() {
-            console.log(this.io);
+            console.log(this.easygg.io);
+        },
+        'socket': function() {
+            console.log(this);
+        },
+        'rooms': function() {
+            console.log(this.rooms);
         },
         'instances': function() {
-            console.log(this.instances);
+            console.log(this.easygg.instances);
         },
         'join': function(data) {
-            console.log(data);
             // Check if player is registered
-            if (this.players[this.socket.id]) {
+            if (this.easygg.players[this.id]) {
+                var player = this.easygg.players[this.id];
                 // Check if instance exists
-                if (undefined == data.instance || !this.instances.hasOwnProperty(data.instance.id)) {
+                if (undefined == data.instance || !this.easygg.instances.hasOwnProperty(data.instance)) {
                     instance = new Instance({
-                        game: this.games[data.game]
+                        game: this.easygg.games[data.game]
                     });
-                    this.games[data.game].updateInstance(instance.id, instance);
-                    this.updateInstance(instance.id, instance);
+                    this.easygg.games[data.game].updateInstance(instance.id, instance);
+                    this.easygg.updateInstance(instance.id, instance);
                 } else {
-                    instance = this.instances[data.instance];
+                    instance = this.easygg.instances[data.instance];
                 }
 
-                player.joinInstance(data.instance);
-                data.instance.updatePlayer(player.id, player);
+                // Check if instance hasn't already started
+                if (!instance.started) {
+                    player.joinInstance(instance);
+                    instance.updatePlayer(player.id, player);
 
-                this.joinGame(this.players[this.socket.id], this.games[data.game], instance);
+                    this.easygg.joinGame(this, instance);
+                    this.emit('instance', {id: instance.id});
+                }
             }
         }
     },
     onDisconnect: function() {
-        console.log('Disconnected ('+this.socket.id+')');
+        console.log('Disconnected ('+this.id+')');
         // Leave all instances
-        var player = this.players[this.socket.id];
+        var player = this.easygg.players[this.id];
         if (player) {
             var instances = player.instances;
             for (var instance in instances) {
                 delete instances[instance].players[player.id];
                 // Delete instance if no player in it
-                console.log(instances[instance].players.length);
                 if (!instances[instance].players.length) {
                     delete instances[instance].game.instances[instance];
-                    delete this.instances[instance];
+                    delete this.easygg.instances[instance];
                 }
             }
-            delete this.players[player.id];
+            delete this.easygg.players[player.id];
         }
     }
 });
