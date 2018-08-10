@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "chai": "^3.4.1",
-    "debug": "~2.2.0",
+    "debug": "^2.6.9",
     "mocha": "^2.3.4",
     "shortid": "^2.2.4",
     "socket.io-client": "^1.4.5"
